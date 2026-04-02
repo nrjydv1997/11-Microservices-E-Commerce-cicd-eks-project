@@ -19,7 +19,7 @@ COPY --from=builder /app/build/install/hipstershop .
 
 RUN addgroup -S appgroup && \
     adduser -S appuser -G appgroup && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appgroup /app
 
 USER appuser
 
