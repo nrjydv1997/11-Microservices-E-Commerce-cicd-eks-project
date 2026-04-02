@@ -53,7 +53,7 @@ pipeline{
 
             steps {
                 dir('eks-terraform') {
-                    sh 'terraform apply -auto-aprove'
+                    sh 'terraform apply -auto-approve'
                 }
             }
         }
