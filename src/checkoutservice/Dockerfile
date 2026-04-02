@@ -1,36 +1,29 @@
-############################
-# Stage 1: Build Stage
-############################
-FROM node:20.8.0-slim AS builder
 
-# ✅ Install Python + build tools needed by node-gyp to compile pprof from source
-RUN apk add --no-cache python3 make g++ 
+FROM node:20.8.0-alpine@sha256:37750e51d61bef92165b2e29a77da4277ba0777258446b7a9c99511f119db096 as base
 
-WORKDIR /build
+FROM base as builder
 
-COPY package.json package-lock.json ./
+# Some packages (e.g. @google-cloud/profiler) require additional
+# deps for post-install scripts
+RUN apk add --update --no-cache \
+    python3 \
+    make \
+    g++
 
-RUN apk add --no-cache python3 make g++
+WORKDIR /usr/src/app
 
-RUN npm ci --omit=dev
+COPY package*.json ./
 
-# Copy source code
+RUN npm install --only=production
+
+FROM base
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
 COPY . .
 
-############################
-# Stage 2: Runtime Stage
-############################
-FROM node:20.8.0-alpine
+EXPOSE 7000
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-WORKDIR /app
-
-COPY --from=builder /build/node_modules ./node_modules
-COPY --from=builder /build .
-
-USER appuser
-
-EXPOSE 8080
-
-ENTRYPOINT ["node", "server.js"]
+ENTRYPOINT [ "node", "server.js" ]
