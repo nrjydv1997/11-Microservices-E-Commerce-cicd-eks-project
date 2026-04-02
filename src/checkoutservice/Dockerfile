@@ -1,40 +1,60 @@
-############################
 # Stage 1: Builder stage
-############################
-FROM node:20.8.0-alpine@sha256:37750e51d61bef92165b2e29a77da4277ba0777258446b7a9c99511f119db096 AS builder
+FROM golang:1.21.3-alpine@sha256:926f7f7e1ab8509b4e91d5ec6d5916ebb45155b0c8920291ba9f361d65385806 AS builder
 
+
+# Install git (required for downloading dependencies)
+RUN apk add --no-cache git
+
+
+# Create working directory
 WORKDIR /build
 
-COPY package.json package-lock.json ./
 
-# ✅ FIX: Install build tools needed by node-gyp to compile pprof from source
-# pprof@3.2.1 has no pre-built binary for node-v115-linux-x64-musl (Node 20 + Alpine)
-# so it must compile from source, which requires python3 + make + g++
-RUN apk add --no-cache python3 make g++
+# Copy dependency files first (for caching)
+COPY go.mod go.sum ./
 
-RUN npm ci --omit=dev
 
+# Download dependencies
+RUN go mod download
+
+
+# Copy source code
 COPY . .
 
-############################
+
+# Build binary
+RUN go build -o checkoutservice main.go
+
+
+########################################################
 # Stage 2: Runtime stage
-############################
-FROM node:20-alpine
-
-RUN apk add --no-cache ca-certificates
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+FROM alpine:3.18.4@sha256:eece025e432126ce23f223450a0326fbebde39cdf496a85d8c016293fc851978
 
 WORKDIR /app
 
-COPY --from=builder /build /app
 
-RUN chown -R appuser:appgroup /app
+# Install certificates
+RUN apk add --no-cache ca-certificates
 
+
+# Copy binary from builder
+COPY --from=builder /build/checkoutservice .
+
+
+# Create secure user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+
+# Change ownership
+RUN chown appuser:appgroup /app/checkoutservice
+
+
+# Switch to secure user
 USER appuser
 
-EXPOSE 7000
 
-ENV NODE_ENV=production
+# Expose port
+EXPOSE 5050
 
-ENTRYPOINT ["node", "server.js"]
+# Run application
+ENTRYPOINT ["./checkoutservice"]
