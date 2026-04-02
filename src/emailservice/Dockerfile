@@ -1,15 +1,20 @@
+############################
+# Stage 1: Builder stage
+############################
 FROM python:3.12-alpine AS builder
 
 WORKDIR /build
 
-RUN apk add --no-cache gcc musl-dev libffi-dev
-
+# ✅ FIX: Add g++ and python3-dev needed by google-cloud-profiler's C++ extension
+RUN apk add --no-cache gcc g++ musl-dev libffi-dev python3-dev
 
 COPY requirements.txt .
 
 RUN pip install --user --no-cache-dir -r requirements.txt
 
-
+############################
+# Stage 2: Runtime stage
+############################
 FROM python:3.12-alpine
 
 RUN apk add --no-cache ca-certificates
