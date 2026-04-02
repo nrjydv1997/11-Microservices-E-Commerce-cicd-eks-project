@@ -3,22 +3,25 @@
 ############################
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS builder
 
+# ✅ KEY FIX: Install protoc natively on Alpine (musl-compatible)
+# grpc.tools linux_x64 protoc is glibc-linked and cannot run on musl/Alpine
+RUN apk add --no-cache protobuf protobuf-dev
+
 RUN addgroup -S buildgroup && adduser -S builduser -G buildgroup
 
-WORKDIR /app
+WORKDIR /build
 
 # Copy only project file first (dependency caching)
 COPY src/cartservice.csproj ./
 
-# ✅ FIX: Restore WITHOUT -r flag so grpc.tools picks linux_musl_x64 protoc
-# that matches the Alpine (musl) build environment
-RUN dotnet restore cartservice.csproj
+# Restore with linux-musl-x64 runtime
+RUN dotnet restore cartservice.csproj \
+    -r linux-musl-x64
 
 # Copy remaining source code
 COPY src/ ./
 
-# ✅ FIX: Publish also WITHOUT --no-restore so it re-resolves
-# the correct native tools for linux-musl-x64
+# ✅ Tell grpc.tools to use the system-installed protoc, not its own bundled binary
 RUN dotnet publish cartservice.csproj \
     -c Release \
     -r linux-musl-x64 \
@@ -27,6 +30,8 @@ RUN dotnet publish cartservice.csproj \
     -p:PublishTrimmed=true \
     -p:TrimMode=Full \
     -p:EnableCompressionInSingleFile=true \
+    -p:Protobuf_ProtocFullPath=/usr/bin/protoc \
+    --no-restore \
     -o /app
 
 ############################
