@@ -1,7 +1,7 @@
 ############################
 # Stage 1: Build Stage
 ############################
-FROM node:20.8.0-alpine AS builder
+FROM node:20.8.0-slim AS builder
 
 # ✅ Install Python + build tools needed by node-gyp to compile pprof from source
 RUN apk add --no-cache python3 make g++ 
@@ -9,6 +9,8 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /build
 
 COPY package.json package-lock.json ./
+
+RUN apk add --no-cache python3 make g++
 
 RUN npm ci --omit=dev
 
