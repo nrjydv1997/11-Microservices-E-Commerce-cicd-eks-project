@@ -33,7 +33,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/checkoutservice:1
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/checkoutservice:3
           imagePullPolicy: Always
           ports:
               name: grpc
