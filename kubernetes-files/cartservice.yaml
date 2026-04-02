@@ -34,7 +34,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/cartservice:1
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/cartservice:8
           imagePullPolicy: Always
           ports:
             - containerPort: 7070
