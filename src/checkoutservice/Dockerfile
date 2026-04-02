@@ -1,60 +1,34 @@
-# Stage 1: Builder stage
-FROM golang:1.21.3-alpine@sha256:926f7f7e1ab8509b4e91d5ec6d5916ebb45155b0c8920291ba9f361d65385806 AS builder
+############################
+# Stage 1: Build Stage
+############################
+FROM node:20.8.0-alpine AS builder
 
+# ✅ Install Python + build tools needed by node-gyp to compile pprof from source
+RUN apk add --no-cache python3 make g++ 
 
-# Install git (required for downloading dependencies)
-RUN apk add --no-cache git
-
-
-# Create working directory
 WORKDIR /build
 
+COPY package.json package-lock.json ./
 
-# Copy dependency files first (for caching)
-COPY go.mod go.sum ./
-
-
-# Download dependencies
-RUN go mod download
-
+RUN npm ci --omit=dev
 
 # Copy source code
 COPY . .
 
+############################
+# Stage 2: Runtime Stage
+############################
+FROM node:20.8.0-alpine
 
-# Build binary
-RUN go build -o checkoutservice main.go
-
-
-########################################################
-# Stage 2: Runtime stage
-FROM alpine:3.18.4@sha256:eece025e432126ce23f223450a0326fbebde39cdf496a85d8c016293fc851978
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
+COPY --from=builder /build/node_modules ./node_modules
+COPY --from=builder /build .
 
-# Install certificates
-RUN apk add --no-cache ca-certificates
-
-
-# Copy binary from builder
-COPY --from=builder /build/checkoutservice .
-
-
-# Create secure user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-
-# Change ownership
-RUN chown appuser:appgroup /app/checkoutservice
-
-
-# Switch to secure user
 USER appuser
 
+EXPOSE 8080
 
-# Expose port
-EXPOSE 5050
-
-# Run application
-ENTRYPOINT ["./checkoutservice"]
+ENTRYPOINT ["node", "server.js"]
