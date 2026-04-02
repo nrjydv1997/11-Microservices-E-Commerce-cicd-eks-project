@@ -21,7 +21,6 @@ COPY src/ ./
 # the correct native tools for linux-musl-x64
 RUN dotnet publish cartservice.csproj \
     -c Release \
-    -r linux-musl-x64 \
     --self-contained true \
     -p:PublishSingleFile=true \
     -p:PublishTrimmed=true \
