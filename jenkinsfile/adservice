@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO_NAME = "11-Microservices-E-Commerce-cicd-eks-project"
+        GIT_EMAIL = "nrjydv1997@gmail.com"
+        GIT_USER_NAME = "nrjydv1997"
+        IMAGE_NAME = "adservice"
+        REGISTRY_URL = "444625565095.dkr.ecr.ap-south-1.amazonaws.com"
+        YAML_FILE = "adservice.yaml"
+    }
+
+    stages {
+        stage('Cleaning Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout from git') {
+            steps {
+                git branch: 'master', url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
+            }
+        }
+
+        stage('Docker image build') {
+            steps {
+                script {
+                    dir("src/${IMAGE_NAME}") {
+                        sh 'docker system prune -f'
+                        sh 'docker container prune -f'
+                        sh "docker build -t ${IMAGE_NAME} ."
+                    }
+                }
+            }
+        }
+
+        stage('ECR Image Pushing') {
+            steps {
+                script {
+                    sh """
+                        aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${REGISTRY_URL}
+                        docker tag ${IMAGE_NAME}:latest ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_NUMBER}
+                        docker push ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_NUMBER}
+                    """
+                }
+            }
+        }
+
+        stage('Update Deployment file') {
+            steps {
+                dir('kubernetes-files') {
+                    withCredentials([string(credentialsId: 'my-git-pattoken', variable: 'git_token')]) {
+                        sh """
+                            git config user.email "${GIT_EMAIL}"
+                            git config user.name "${GIT_USER_NAME}"
+                            echo ${BUILD_NUMBER}
+
+                            sed -i "s#image:.*#image: ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_NUMBER}#g" ${YAML_FILE}
+                            git add .
+                            git commit -m "Update ${IMAGE_NAME} Image version to ${BUILD_NUMBER}" || echo "No changes to commit"
+                            git push https://${git_token}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:master
+                        """
+                    }
+                }
+            }
+        }
+    }
+} 
