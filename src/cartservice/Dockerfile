@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS builder
 
 RUN addgroup -S buildgroup && adduser -S builduser -G buildgroup
 
-WORKDIR /build
+WORKDIR /app
 
 # Copy only project file first (dependency caching)
 COPY src/cartservice.csproj ./
@@ -21,6 +21,7 @@ COPY src/ ./
 # the correct native tools for linux-musl-x64
 RUN dotnet publish cartservice.csproj \
     -c Release \
+    -r linux-musl-x64 \
     --self-contained true \
     -p:PublishSingleFile=true \
     -p:PublishTrimmed=true \
