@@ -1,38 +1,29 @@
-# Stage 1: Builder
-FROM node:20-alpine AS builder
 
-RUN apk add --no-cache python3 make g++
+FROM node:20.8.0-alpine@sha256:37750e51d61bef92165b2e29a77da4277ba0777258446b7a9c99511f119db096 as base
 
-WORKDIR /build
+FROM base as builder
 
-COPY package.json package-lock.json ./
+# Some packages (e.g. @google-cloud/profiler) require additional
+# deps for post-install scripts
+RUN apk add --update --no-cache \
+    python3 \
+    make \
+    g++
 
-RUN npm ci --omit=dev
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+FROM base
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 
 COPY . .
 
-# Stage 2: Runtime
-FROM node:20-alpine
-
-RUN apk add --no-cache ca-certificates
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-WORKDIR /app
-
-COPY --from=builder /build/node_modules ./node_modules
-COPY --from=builder /build/server.js .
-COPY --from=builder /build/charge.js .
-COPY --from=builder /build/index.js .
-COPY --from=builder /build/package.json .
-COPY --from=builder /build/proto ./proto
-
-RUN chown -R appuser:appgroup /app
-
-USER appuser
-
-ENV NODE_ENV=production
-
 EXPOSE 50051
 
-ENTRYPOINT ["node", "server.js"]
+ENTRYPOINT [ "node", "index.js" ]
