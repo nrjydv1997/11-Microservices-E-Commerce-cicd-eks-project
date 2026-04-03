@@ -1,32 +1,20 @@
-# Stage 1: Builder
-FROM python:3.12-alpine AS builder
+FROM python:3.11-alpine
 
-# Install C++ compiler for native packages (google-cloud-profiler)
-RUN apk add --no-cache g++ make
+# google-cloud-profiler needs C++ compiler to build
+RUN apk add --no-cache gcc g++ make musl-dev python3-dev ca-certificates
 
-WORKDIR /build
-
-COPY requirements.txt .
-
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-# Stage 2: Runtime
-FROM python:3.12-alpine
-
-RUN apk add --no-cache ca-certificates
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN pip install --no-cache-dir setuptools
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /home/appuser/.local
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chown -R appuser:appgroup /app /home/appuser/.local
-
-# Fixed: /home not /bome
-ENV PATH="/home/appuser/.local/bin:$PATH"
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
 
 USER appuser
 
