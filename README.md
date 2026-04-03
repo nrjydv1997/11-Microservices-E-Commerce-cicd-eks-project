@@ -460,6 +460,3 @@ DevOps Engineer | AWS | Kubernetes | CI/CD
 
 ---
 
-## 📄 License
-
-This project is for educational purposes.
