@@ -1,3 +1,16 @@
+# Stage 1: Builder
+FROM node:20-alpine AS builder
+
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /build
+
+COPY package.json package-lock.json ./
+
+RUN npm ci --omit=dev
+
+COPY . .
+
 # Stage 2: Runtime
 FROM node:20-alpine
 
