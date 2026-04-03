@@ -7,7 +7,8 @@ WORKDIR /build
 
 COPY requirements.txt .
 
-RUN pip install --user --no-cache-dir -r requirements.txt
+# Install setuptools explicitly along with requirements
+RUN pip install --user --no-cache-dir setuptools -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.12-alpine
@@ -27,7 +28,6 @@ RUN chown -R appuser:appgroup /app /home/appuser/.local
 USER appuser
 
 ENV PATH="/home/appuser/.local/bin:$PATH"
-# Add this line - tells Python where to find the packages
 ENV PYTHONPATH="/home/appuser/.local/lib/python3.12/site-packages:$PYTHONPATH"
 
 EXPOSE 8080
