@@ -27,7 +27,7 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
             capabilities:
-              drop: 
+              drop:
                 - ALL
           image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/paymentservice:3
           ports:
@@ -37,10 +37,18 @@ spec:
               value: "50051"
             - name: DISABLE_PROFILER
               value: "1"
+          # Fix: writable /tmp for Node.js
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 10
             grpc:
               port: 50051
           livenessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 10
             grpc:
               port: 50051
           resources:
@@ -50,6 +58,9 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -63,4 +74,3 @@ spec:
     - name: grpc
       port: 50051
       targetPort: 50051
-
