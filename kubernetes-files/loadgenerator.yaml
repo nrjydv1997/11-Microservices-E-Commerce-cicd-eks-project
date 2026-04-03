@@ -25,7 +25,7 @@ spec:
         runAsUser: 1000
       initContainers:
         - name: frontend-check
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/loadgenerator:1
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/loadgenerator:3
           command:          # ← fixed indentation
             - /bin/sh
             - -exc
@@ -55,7 +55,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/loadgenerator:1
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/loadgenerator:3
           env:
             - name: FRONTEND_ADDR
               value: "frontend:80"
