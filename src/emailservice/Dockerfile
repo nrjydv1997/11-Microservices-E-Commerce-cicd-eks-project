@@ -7,13 +7,15 @@ WORKDIR /build
 
 COPY requirements.txt .
 
-# Install setuptools explicitly along with requirements
 RUN pip install --user --no-cache-dir setuptools -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.12-alpine
 
 RUN apk add --no-cache ca-certificates
+
+# Fix: install setuptools in runtime so pkg_resources is available
+RUN pip install --no-cache-dir setuptools
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
