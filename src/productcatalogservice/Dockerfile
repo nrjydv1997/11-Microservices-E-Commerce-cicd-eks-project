@@ -23,6 +23,8 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 COPY --from=builder /build/productcatalogservice .
+# Fix: copy the product catalog data file
+COPY --from=builder /build/products.json .
 
 RUN chown -R appuser:appgroup /app
 
