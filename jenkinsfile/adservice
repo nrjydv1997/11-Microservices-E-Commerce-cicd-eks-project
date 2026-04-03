@@ -19,8 +19,7 @@ pipeline {
 
         stage('Checkout from git') {
             steps {
-                git branch: 'main', credentialsId: 'git-token', url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
-                
+                 git branch: 'main', credentialsId: 'git-token', url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
             }
         }
 
