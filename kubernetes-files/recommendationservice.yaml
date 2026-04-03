@@ -29,7 +29,7 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/recommendationservice:2
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/recommendationservice:3
           ports:
             - containerPort: 8080
           readinessProbe:
