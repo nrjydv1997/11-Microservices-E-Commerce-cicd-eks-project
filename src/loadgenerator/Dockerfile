@@ -1,50 +1,35 @@
-#Stage-1 Builder
+# Stage 1: Builder
+FROM python:3.11-alpine AS builder
 
-FROM python:3.12-alpine AS builder
+RUN apk add --no-cache g++ make
 
 WORKDIR /build
 
-#Install build dependencies (if needed)
-RUN apk add --no-cache gcc musl-dev libffi-dev
-
-#Copy dependencies files first
 COPY requirements.txt .
 
-#Install dependencies
-RUN pip install --user --no-cache-dir -r requirements.txt
+# Install to a specific target dir
+RUN pip install --no-cache-dir --target=/build/packages -r requirements.txt
 
+# Stage 2: Runtime
+FROM python:3.11-alpine
 
-####Stage-2 Runtime
-FROM python:3.12-alpine
-
-#Install Runtime dependencies
-RUN apk add --no-cache ca-certificates
-
-#Create secure user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-#Copy installed python packages
-COPY --from=builder /root/.local /home/appuser/.local
+# Copy installed packages
+COPY --from=builder /build/packages /app/packages
 
-#COPY Application file
-COPY locustfile.py .
+COPY . .
 
-#Change ownership
-RUN chown -R appuser:appgroup /app /home/appuser/.local
+RUN chown -R appuser:appgroup /app
 
-#Switch to non-root user
 USER appuser
 
-#Update PATH
-ENV PATH="/home/appuser/.local/bin:$PATH"
+# Point Python to the packages
+ENV PYTHONPATH="/app/packages:$PYTHONPATH"
+ENV PATH="/app/packages/bin:$PATH"
 
-#Default locust environment
-ENV LOCUST_HOST=http://frontend:8080
-
-#Expose locust UI port
 EXPOSE 8089
 
-#Run locust
-ENTRYPOINT ["locust", "-f", "locustfile.py", "--host=http://frontend:8080"]
+ENTRYPOINT ["locust", "--host=http://frontend:80"]
