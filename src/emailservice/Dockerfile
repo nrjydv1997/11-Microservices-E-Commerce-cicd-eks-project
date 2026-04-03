@@ -1,36 +1,24 @@
-# Stage 1: Builder
-FROM python:3.12-alpine AS builder
-
-RUN apk add --no-cache gcc g++ musl-dev libffi-dev python3-dev
-
-WORKDIR /build
-
-COPY requirements.txt .
-
-RUN pip install --user --no-cache-dir setuptools -r requirements.txt
-
-# Stage 2: Runtime
 FROM python:3.12-alpine
 
-RUN apk add --no-cache ca-certificates
+# Install build dependencies
+RUN apk add --no-cache gcc g++ musl-dev libffi-dev python3-dev ca-certificates
 
-# Fix: install setuptools in runtime so pkg_resources is available
+# Install setuptools first, then requirements system-wide (no --user)
 RUN pip install --no-cache-dir setuptools
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /home/appuser/.local
+COPY requirements.txt .
+
+# System-wide install - no path/PYTHONPATH issues
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chown -R appuser:appgroup /app /home/appuser/.local
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
 
 USER appuser
-
-ENV PATH="/home/appuser/.local/bin:$PATH"
-ENV PYTHONPATH="/home/appuser/.local/lib/python3.12/site-packages:$PYTHONPATH"
 
 EXPOSE 8080
 
