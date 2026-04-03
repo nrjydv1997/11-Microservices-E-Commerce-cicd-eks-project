@@ -24,17 +24,18 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
       initContainers:
-        - command:
-          - /bin/sh
-          - -exc
-          - |
-            echo "Init container pinging frontend: ${FRONTEND_ADDR}..."
-            STATUSCODE=$(wget --server-response http://${FRONTEND_ADDR} 2>&1 | awk '/^  HTTP/{print $2}')
-            if test $STATUSCODE -ne 200; then
-                echo "Error: Could not reach frontend - Status code: ${STATUSCODE}"
-                exit 1
-            fi
-          name: frontend-check
+        - name: frontend-check
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/loadgenerator:1
+          command:          # ← fixed indentation
+            - /bin/sh
+            - -exc
+            - |
+              echo "Init container pinging frontend: ${FRONTEND_ADDR}..."
+              STATUSCODE=$(wget --server-response http://${FRONTEND_ADDR} 2>&1 | awk '/^  HTTP/{print $2}')
+              if test $STATUSCODE -ne 200; then
+                  echo "Error: Could not reach frontend - Status code: ${STATUSCODE}"
+                  exit 1
+              fi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -42,7 +43,6 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/loadgenerator:1
           env:
             - name: FRONTEND_ADDR
               value: "frontend:80"
@@ -68,4 +68,3 @@ spec:
             limits:
               cpu: 300m
               memory: 256Mi
-
