@@ -36,7 +36,7 @@ spec:
           image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/checkoutservice:2
           imagePullPolicy: Always
           ports:
-              name: grpc
+            - name: grpc
               containerPort: 5050
           readinessProbe:
             initialDelaySeconds: 15

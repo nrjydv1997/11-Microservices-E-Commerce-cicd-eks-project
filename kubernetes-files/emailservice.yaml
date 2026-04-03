@@ -34,7 +34,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          mage: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/emailservice:1
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/emailservice:1
           imagePullPolicy: Always
           ports:
             - name: grpc
