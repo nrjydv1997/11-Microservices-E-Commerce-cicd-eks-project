@@ -58,10 +58,9 @@ spec:
             periodSeconds: 10
             grpc:
               port: 7070
-
 ---
 apiVersion: v1
-kind: Serive
+kind: Service
 metadata:
   name: cartservice
 spec:
@@ -69,6 +68,6 @@ spec:
   selector:
     app: cartservice
   ports:
-    - name: grpc:
+    - name: grpc
       port: 7070
       targetPort: 7070
