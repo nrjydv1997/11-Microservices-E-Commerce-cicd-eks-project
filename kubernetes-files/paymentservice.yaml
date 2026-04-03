@@ -29,7 +29,7 @@ spec:
             capabilities:
               drop:
                 - ALL
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/paymentservice:4
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/paymentservice:6
           ports:
             - containerPort: 50051
           env:
