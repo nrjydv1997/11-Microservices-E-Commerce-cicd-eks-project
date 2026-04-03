@@ -31,7 +31,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/frontend:1
+          image: 444625565095.dkr.ecr.ap-south-1.amazonaws.com/frontend:2
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
